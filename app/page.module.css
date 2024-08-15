@@ -1,0 +1,46 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.participants {
+  max-width: 500px;
+  min-width: 300px;
+}
+
+.game_buttons {
+  padding: 20px 0;
+  display: flex;
+  gap: 25px;
+}
+
+.game_button {
+  font-size: 100%;
+  padding: 35px;
+  background-color: grey;
+  border: none;
+  height: 100%;
+  width: 100%;
+  width: 200px;
+  height: 100px;
+}
+
+.buttons {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.plusminus_button {
+  padding: 5px 10px;
+}
+
+.minus_button {
+  padding: 5px 10px;
+}
+
+.participant_input {
+  margin-top: 10px;
+}
