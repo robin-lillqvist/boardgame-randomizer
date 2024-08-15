@@ -13,6 +13,21 @@ export default function Home() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [randomizedParticipants, setRandomizedParticipants] = useState<string[]>([]);
   const [availableFactions, setAvailableFactions] = useState<Faction[]>([]);
+  const [hasBeenRandomized, setHasBeenRandomized] = useState(false); // Track randomization state
+
+  const handleRandomize = (participants: string[]) => {
+    const nonEmptyParticipants = participants.filter((participant) => participant.trim() !== "");
+    const shuffled = randomizeArray(nonEmptyParticipants);
+    setRandomizedParticipants(shuffled);
+    setAvailableFactions(factions[selectedGame!]);
+    setHasBeenRandomized(true); // Set randomization state to true
+  };
+
+  const handleRemove = (updatedParticipants: string[]) => {
+    const nonEmptyParticipants = updatedParticipants.filter((participant) => participant.trim() !== "");
+    setRandomizedParticipants(nonEmptyParticipants);
+    setHasBeenRandomized(false); // Reset randomization state
+  };
 
   return (
     <section className='flex flex-col items-center justify-center gap-4 py-8 md:py-10'>
@@ -27,22 +42,12 @@ export default function Home() {
         {selectedGame && (
           <div className='mt-8'>
             <h1>{selectedGame}</h1>
-            <ParticipantForm
-              onRandomize={(participants) => {
-                const nonEmptyParticipants = participants.filter((participant) => participant.trim() !== "");
-                const shuffled = randomizeArray(nonEmptyParticipants);
-                setRandomizedParticipants(shuffled);
-                setAvailableFactions(factions[selectedGame]);
-              }}
-              onRemove={(updatedParticipants) => {
-                const nonEmptyParticipants = updatedParticipants.filter((participant) => participant.trim() !== "");
-                setRandomizedParticipants(nonEmptyParticipants);
-              }}
-            />
+            <ParticipantForm onRandomize={handleRandomize} onRemove={handleRemove} />
           </div>
         )}
 
-        {randomizedParticipants.length > 0 &&
+        {hasBeenRandomized &&
+          randomizedParticipants.length > 0 &&
           randomizedParticipants.some((participant) => participant.trim() !== "") && (
             <FactionSelection participants={randomizedParticipants} availableFactions={availableFactions} />
           )}
@@ -156,22 +161,26 @@ function FactionSelection({
   };
 
   const assignFactions = () => {
-    const selectedFactions = factions.filter((faction) => faction.selected).map((faction) => faction.name);
+    // Shuffle participants and factions
+    const shuffledParticipants = randomizeArray(participants);
+    const shuffledFactions = randomizeArray(
+      factions.filter((faction) => faction.selected).map((faction) => faction.name)
+    );
 
-    let newAssignments: Record<string, string[]> = {};
-    participants.forEach((participant) => {
+    // Create initial empty assignments for each participant
+    const newAssignments: Record<string, string[]> = {};
+    shuffledParticipants.forEach((participant) => {
       newAssignments[participant] = [];
     });
 
-    const totalRounds = 2; // Each participant selects 2 races
-    for (let round = 0; round < totalRounds; round++) {
-      const shuffledParticipants = randomizeArray(participants);
-      shuffledParticipants.forEach((participant, index) => {
-        if (selectedFactions.length > 0) {
-          const selectedFaction = selectedFactions.shift();
-          if (selectedFaction) {
-            newAssignments[participant].push(selectedFaction);
-          }
+    // Assign factions to participants in a round-robin manner
+    let factionIndex = 0;
+    for (let round = 0; round < 2; round++) {
+      // Adjust the number of rounds if needed
+      shuffledParticipants.forEach((participant) => {
+        if (factionIndex < shuffledFactions.length) {
+          newAssignments[participant].push(shuffledFactions[factionIndex]);
+          factionIndex++;
         }
       });
     }
