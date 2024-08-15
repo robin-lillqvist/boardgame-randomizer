@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
-import { Button, ButtonGroup } from "@nextui-org/button";
+import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
 import { CheckboxGroup, Checkbox } from "@nextui-org/checkbox";
 
@@ -15,7 +15,7 @@ export default function Home() {
   const [availableFactions, setAvailableFactions] = useState<Faction[]>([]);
 
   return (
-    <section className='flex flex-col items-center justify-center gap-4 py-8 md:py-10 page'>
+    <section className='flex flex-col items-center justify-center gap-4 py-8 md:py-10'>
       <div className='inline-block max-w-lg text-center justify-center'>
         {games.map((game) => (
           <button key={game} onClick={() => setSelectedGame(game)} className={styles.game_button}>
@@ -29,20 +29,23 @@ export default function Home() {
             <h1>{selectedGame}</h1>
             <ParticipantForm
               onRandomize={(participants) => {
-                const shuffled = randomizeArray(participants);
+                const nonEmptyParticipants = participants.filter((participant) => participant.trim() !== "");
+                const shuffled = randomizeArray(nonEmptyParticipants);
                 setRandomizedParticipants(shuffled);
                 setAvailableFactions(factions[selectedGame]);
               }}
               onRemove={(updatedParticipants) => {
-                setRandomizedParticipants(updatedParticipants);
+                const nonEmptyParticipants = updatedParticipants.filter((participant) => participant.trim() !== "");
+                setRandomizedParticipants(nonEmptyParticipants);
               }}
             />
           </div>
         )}
 
-        {randomizedParticipants.length > 0 && (
-          <FactionSelection participants={randomizedParticipants} availableFactions={availableFactions} />
-        )}
+        {randomizedParticipants.length > 0 &&
+          randomizedParticipants.some((participant) => participant.trim() !== "") && (
+            <FactionSelection participants={randomizedParticipants} availableFactions={availableFactions} />
+          )}
       </div>
     </section>
   );
@@ -85,20 +88,23 @@ function ParticipantForm({
   };
 
   const updateParticipant = (index: number, value: string) => {
+    console.log("updateParticipant");
     const newParticipants = [...participants];
     newParticipants[index] = value;
     setParticipants(newParticipants);
   };
 
   const removeParticipant = (index: number) => {
+    console.log("removeParticipant");
     const newParticipants = participants.filter((_, i) => i !== index);
     setParticipants(newParticipants);
     onRemove(newParticipants);
   };
 
   const clearParticipants = () => {
+    console.log("removeParticipant");
     // Reset the participants state to an array with one empty string
-    setParticipants([""]);
+    setParticipants(participants.map(() => ""));
   };
 
   return (
@@ -178,17 +184,19 @@ function FactionSelection({
       <h1>Faktioner</h1>
       {factions.map((faction, index) => (
         <div key={index}>
-          <input type='checkbox' checked={faction.selected} onChange={() => toggleFaction(index)} />
-          <label>{faction.name}</label>
+          <Checkbox onChange={() => toggleFaction(index)} defaultSelected>
+            {faction.name}
+          </Checkbox>
         </div>
       ))}
-      <Button color='success' onClick={assignFactions} className='mt-8'>
+
+      <Button color='success' className='mt-8' onClick={assignFactions}>
         <strong>Tilldela raser/faktioner</strong>
       </Button>
 
       {Object.keys(assignments).length > 0 && (
-        <div className='mt-8'>
-          <h1>Tilldelade raser/faktioner:</h1>
+        <div>
+          <h4>Tilldelade raser/faktioner:</h4>
           {participants.map((participant) => (
             <div key={participant}>
               <strong>{participant}:</strong>{" "}
